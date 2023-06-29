@@ -1,0 +1,201 @@
+---
+openapi: 3.0.3
+info:
+  title: '"event-log-collector-service" API'
+  version: "1"
+paths:
+  /export/{scenario}:
+    get:
+      tags:
+      - Event Log Export Resource
+      summary: Export logs of scenario to CSV
+      parameters:
+      - name: scenario
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+  /logs:
+    get:
+      tags:
+      - Event Log Resource
+      summary: Get all EventLogs
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/EventLogEntity'
+    post:
+      tags:
+      - Event Log Resource
+      summary: Add new EventLog
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EventLogEntity'
+      responses:
+        "201":
+          description: Event log created
+        "409":
+          description: Event log already exists
+  /logs/scenarios:
+    get:
+      tags:
+      - Event Log Resource
+      summary: Get all scenarios
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+  /logs/{id}:
+    get:
+      tags:
+      - Event Log Resource
+      summary: Get EventLog by id
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          format: int64
+          type: integer
+      responses:
+        "200":
+          description: OK
+    delete:
+      tags:
+      - Event Log Resource
+      summary: Delete EventLog by id
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          format: int64
+          type: integer
+      responses:
+        "200":
+          description: OK
+  /users:
+    get:
+      tags:
+      - User Resource
+      summary: Get all users
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/UserEntity'
+  /users/count:
+    get:
+      tags:
+      - User Resource
+      summary: Get user count
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                format: int64
+                type: integer
+  /users/{id}:
+    get:
+      tags:
+      - User Resource
+      summary: Get user by id
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          format: int64
+          type: integer
+      responses:
+        "200":
+          description: OK
+    put:
+      tags:
+      - User Resource
+      summary: Update user by id
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          format: int64
+          type: integer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserEntity'
+      responses:
+        "200":
+          description: OK
+components:
+  schemas:
+    EventLogEntity:
+      required:
+      - timestamp
+      - scenario
+      - event
+      - user
+      type: object
+      properties:
+        id:
+          format: int64
+          type: integer
+          nullable: true
+        timestamp:
+          $ref: '#/components/schemas/Instant'
+        scenario:
+          type: string
+        event:
+          type: string
+        eventData:
+          type: string
+          nullable: true
+        user:
+          $ref: '#/components/schemas/UserEntity'
+    Instant:
+      format: date-time
+      type: string
+      example: 2022-03-10T16:15:50Z
+    UserEntity:
+      required:
+      - formId
+      - name
+      type: object
+      properties:
+        id:
+          format: int64
+          type: integer
+          nullable: true
+        formId:
+          type: string
+        formSubmitted:
+          type: boolean
+          nullable: true
+        name:
+          type: string
+        email:
+          type: string
+          nullable: true

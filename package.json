@@ -1,0 +1,23 @@
+﻿{
+  "name": "cz.xprees.event-logging",
+  "version": "1.0.0",
+  "displayName": "Event Logging",
+  "description": "This package provides a simple way to log events in your game.",
+  "unity": "2021.3",
+  "unityRelease": "16f1",
+  "licensesUrl": "http://www.wtfpl.net/txt/copying/",
+  "category": "Core",
+  "dependencies": {
+    "com.cysharp.unitask.compatible": "2.3.1",
+    "cz.xprees.core": "1.0.0"
+  },
+  "keywords": [
+    "Event Logging",
+    "ScriptableObjects"
+  ],
+  "author": {
+    "name": "xprees",
+    "email": "xprees.developer@gmail.com",
+    "url": "https://github.com/xprees"
+  }
+}
