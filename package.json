@@ -9,7 +9,8 @@
   "category": "Core",
   "dependencies": {
     "com.cysharp.unitask.compatible": "2.3.1",
-    "cz.xprees.core": "1.0.0"
+    "cz.xprees.core": "1.0.0",
+    "cz.xprees.events": "1.0.0"
   },
   "keywords": [
     "Event Logging",
