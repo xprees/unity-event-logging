@@ -3,7 +3,7 @@
   "rootNamespace": "Xprees.EventLogging",
   "references": [
     "GUID:f51ebe6a0ceec4240a699833d6309b23",
-    "GUID:999c2ca78ab34358a1222750376a501c",
+    "GUID:999c2ca78ab34358a1222750376a501c"
   ],
   "includePlatforms": [],
   "excludePlatforms": [],
