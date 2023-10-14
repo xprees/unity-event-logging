@@ -9,10 +9,9 @@ using Xprees.EventLogging.Extensions;
 
 namespace Xprees.EventLogging.Api
 {
-    public class EventLoggingApi : IEventLoggingApi, IDisposable
+    public class EventLoggingApi : IEventLoggingApi
     {
         public const string DefaultEndpoint = "https://eventlog-service-phkfk465ha-ew.a.run.app";
-        private readonly CancellationTokenSource _cts = new();
 
         private readonly string _baseUrl;
         private string LogsUri => $"{_baseUrl}/logs";
@@ -30,12 +29,12 @@ namespace Xprees.EventLogging.Api
             _baseUrl = baseUrl;
         }
 
-        public async UniTask<bool> Warmup()
+        public async UniTask<bool> Warmup(CancellationToken cancellationToken = default)
         {
             try
             {
                 var request = UnityWebRequest.Get(_baseUrl);
-                await request.SendWebRequestAsync(_cts.Token);
+                await request.SendWebRequestAsync(cancellationToken);
                 return request.result == UnityWebRequest.Result.Success;
             }
             catch
@@ -46,22 +45,20 @@ namespace Xprees.EventLogging.Api
             return false;
         }
 
-        public async UniTask<bool> SendEventLog(EventLog log)
+        public async UniTask<bool> SendEventLog(EventLog log, CancellationToken cancellationToken = default)
         {
             var request = new UnityWebRequest(LogsUri, UnityWebRequest.kHttpVerbPOST);
             request.AddJsonBody(log);
-            await request.SendWebRequestAsync(_cts.Token);
+            await request.SendWebRequestAsync(cancellationToken);
             return request.result == UnityWebRequest.Result.Success;
         }
 
-        public async UniTask<bool> SendEventLogsBatch(List<EventLog> logs)
+        public async UniTask<bool> SendEventLogsBatch(List<EventLog> logs, CancellationToken cancellationToken = default)
         {
             var batchRequest = new UnityWebRequest(LogsBatchUri, UnityWebRequest.kHttpVerbPOST);
             batchRequest.AddJsonBody(logs);
-            await batchRequest.SendWebRequestAsync(_cts.Token);
+            await batchRequest.SendWebRequestAsync(cancellationToken);
             return batchRequest.result == UnityWebRequest.Result.Success;
         }
-
-        public void Dispose() => _cts?.Dispose();
     }
 }
