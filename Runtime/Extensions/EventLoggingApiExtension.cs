@@ -10,7 +10,7 @@ namespace Xprees.EventLogging.Extensions
         {
             timestamp = timestamp,
             user = user,
-            scenario = @event.scenario.Trim(),
+            scenario = @event.scenario?.Trim(),
             @event = @event.eventName.Trim(),
             eventData = @event.eventData?.Trim(),
         };
