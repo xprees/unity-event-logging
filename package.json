@@ -8,7 +8,7 @@
   "licensesUrl": "http://www.wtfpl.net/txt/copying/",
   "category": "Core",
   "dependencies": {
-    "com.cysharp.unitask.compatible": "2.3.1",
+    "com.cysharp.unitask": "2.5.10",
     "cz.xprees.core": "1.0.0"
   },
   "keywords": [
