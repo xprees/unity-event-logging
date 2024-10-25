@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 using Xprees.Core;
 
 namespace Xprees.EventLogging.ScriptableObjects

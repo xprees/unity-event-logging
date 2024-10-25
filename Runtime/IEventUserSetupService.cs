@@ -1,4 +1,4 @@
-﻿using Xprees.EventLogging.Api.Model;
+using Xprees.EventLogging.Api.Model;
 
 namespace Xprees.EventLogging
 {

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Xprees.EventLogging.Api.Model;
 using Xprees.EventLogging.ScriptableObjects;
 
