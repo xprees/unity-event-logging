@@ -51,7 +51,7 @@ namespace Xprees.EventLogging.Extensions
             var request = UnityWebRequest.Get("http://neverssl.com");
             try
             {
-                await request.SendWebRequest().WithCancellation(cancellationToken);
+                await request.SendWebRequestAsync(cancellationToken: cancellationToken);
             }
             catch (OperationCanceledException)
             {
