@@ -8,7 +8,7 @@
   "category": "Core",
   "dependencies": {
     "com.cysharp.unitask": "2.5.10",
-    "cz.xprees.core": "^1.0.0"
+    "cz.xprees.core": "^1.0.31"
   },
   "keywords": [
     "Unity",
