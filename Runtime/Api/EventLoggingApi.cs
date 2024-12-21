@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using Cysharp.Threading.Tasks;
+using Newtonsoft.Json;
 using UnityEngine;
 using UnityEngine.Networking;
 using Xprees.EventLogging.Api.Model;
@@ -16,6 +17,7 @@ namespace Xprees.EventLogging.Api
         private readonly string _baseUrl;
         private string LogsUri => $"{_baseUrl}/logs";
         private string LogsBatchUri => $"{_baseUrl}/logs/batch";
+        private string ScenariosUri => $"{_baseUrl}/logs/scenarios";
 
         public EventLoggingApi(string baseUrl = DefaultEndpoint)
         {
@@ -59,6 +61,28 @@ namespace Xprees.EventLogging.Api
             batchRequest.AddJsonBody(logs);
             await batchRequest.SendWebRequestAsync(cancellationToken);
             return batchRequest.result == UnityWebRequest.Result.Success;
+        }
+
+        public async UniTask<string[]> GetScenarioNames(CancellationToken cancellationToken = default)
+        {
+            try
+            {
+                var downloadHandlerBuffer = new DownloadHandlerBuffer();
+                var uploadHandlerRaw = new UploadHandlerRaw(Array.Empty<byte>());
+                var request = new UnityWebRequest(ScenariosUri, UnityWebRequest.kHttpVerbGET, downloadHandlerBuffer, uploadHandlerRaw);
+                request.SetRequestHeader("Content-Type", "application/json");
+                await request.SendWebRequestAsync(cancellationToken);
+                var result = request.result;
+                if (result != UnityWebRequest.Result.Success) return Array.Empty<string>();
+                var rawString = request.downloadHandler.text;
+
+                return JsonConvert.DeserializeObject<string[]>(rawString);
+            }
+            catch (Exception e)
+            {
+                Debug.LogError($"API: {e}");
+                return Array.Empty<string>();
+            }
         }
     }
 }
