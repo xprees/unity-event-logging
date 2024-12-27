@@ -16,5 +16,7 @@ namespace Xprees.EventLogging.Api
         UniTask<bool> SendEventLog(EventLog log, CancellationToken cancellationToken = default);
 
         UniTask<bool> SendEventLogsBatch(List<EventLog> logs, CancellationToken cancellationToken = default);
+
+        UniTask<string[]> GetScenarioNames(CancellationToken cancellationToken = default);
     }
 }
