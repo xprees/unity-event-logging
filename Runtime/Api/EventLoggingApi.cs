@@ -39,9 +39,9 @@ namespace Xprees.EventLogging.Api
                 await request.SendWebRequestAsync(cancellationToken);
                 return request.result == UnityWebRequest.Result.Success;
             }
-            catch
+            catch (Exception e)
             {
-                // ignore
+                Debug.LogError(e);
             }
 
             return false;
@@ -49,18 +49,36 @@ namespace Xprees.EventLogging.Api
 
         public async UniTask<bool> SendEventLog(EventLog log, CancellationToken cancellationToken = default)
         {
-            var request = new UnityWebRequest(LogsUri, UnityWebRequest.kHttpVerbPOST);
-            request.AddJsonBody(log);
-            await request.SendWebRequestAsync(cancellationToken);
-            return request.result == UnityWebRequest.Result.Success;
+            try
+            {
+                var request = new UnityWebRequest(LogsUri, UnityWebRequest.kHttpVerbPOST);
+                request.AddJsonBody(log);
+                await request.SendWebRequestAsync(cancellationToken);
+                return request.result == UnityWebRequest.Result.Success;
+            }
+            catch (Exception e)
+            {
+                Debug.LogError(e);
+            }
+
+            return false;
         }
 
         public async UniTask<bool> SendEventLogsBatch(List<EventLog> logs, CancellationToken cancellationToken = default)
         {
-            var batchRequest = new UnityWebRequest(LogsBatchUri, UnityWebRequest.kHttpVerbPOST);
-            batchRequest.AddJsonBody(logs);
-            await batchRequest.SendWebRequestAsync(cancellationToken);
-            return batchRequest.result == UnityWebRequest.Result.Success;
+            try
+            {
+                var batchRequest = new UnityWebRequest(LogsBatchUri, UnityWebRequest.kHttpVerbPOST);
+                batchRequest.AddJsonBody(logs);
+                await batchRequest.SendWebRequestAsync(cancellationToken);
+                return batchRequest.result == UnityWebRequest.Result.Success;
+            }
+            catch (Exception e)
+            {
+                Debug.LogError(e);
+            }
+
+            return false;
         }
 
         public async UniTask<string[]> GetScenarioNames(CancellationToken cancellationToken = default)
