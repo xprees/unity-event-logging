@@ -27,5 +27,5 @@ jobs:
         with:
           token: ${{ secrets.NPM_AUTH_TOKEN }}
           access: public
-          tag: ${{ github.ref_name }}
+          tag: latest
           ignore-scripts: true
