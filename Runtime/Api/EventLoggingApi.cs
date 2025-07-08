@@ -12,7 +12,7 @@ namespace Xprees.EventLogging.Api
 {
     public class EventLoggingApi : IEventLoggingApi
     {
-        public const string DefaultEndpoint = "https://eventlog-service-phkfk465ha-ew.a.run.app";
+        public const string DefaultEndpoint = "https://cf-collector.xprees.com/";
 
         private readonly string _baseUrl;
         private string LogsUri => $"{_baseUrl}/logs";

@@ -46,7 +46,8 @@ namespace Xprees.EventLogging.Extensions
             request.SetRequestHeader("Content-Type", "application/json");
         }
 
-        public async static UniTask<UnityWebRequest.Result> TestConnection(CancellationToken cancellationToken = default)
+        /// Tries to Request neverssl.com to check that internet connection is working 
+        public async static UniTask<UnityWebRequest.Result> TestInternetConnection(CancellationToken cancellationToken = default)
         {
             var request = UnityWebRequest.Get("http://neverssl.com");
             try
