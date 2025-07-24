@@ -23,7 +23,7 @@ Install the package using npm scoped registry in `Project Settings > Package Man
 
 ```
 
-Then simply install the package using the Unity Package Manager using the NPM - xprees scope.
+Then simply install the package using the Unity Package Manager using the _NPM - xprees_ scope or by the package name `cz.xprees.event-logging`.
 
 ### Post-Installation
 
