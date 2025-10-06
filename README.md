@@ -10,17 +10,30 @@ the [CF-Bucket - Log collector service](https://github.com/cyber-framework/cf-bu
 
 ## Installation
 
-Install the package using npm scoped registry in `Project Settings > Package Manager > Scoped Registries`
+Install the package using npm scoped registry in `Project Settings > Package Manager > Scoped Registries` (For more details
+see [Unity Docs - Use a scoped registry in your project](https://docs.unity3d.com/6000.2/Documentation/Manual/upm-scoped-use.html))
+
+`Packages/manifest.json`
 
 ```json
 {
-    "name": "NPM - xprees",
-    "url": "https://registry.npmjs.org",
-    "scopes": [
-        "cz.xprees"
+    "scopedRegistries": [
+        {
+            "name": "package.openupm.com",
+            "url": "https://package.openupm.com",
+            "scopes": [
+                "com.cysharp"
+            ]
+        },
+        {
+            "name": "NPM - xprees",
+            "url": "https://registry.npmjs.org",
+            "scopes": [
+                "cz.xprees"
+            ]
+        }
     ]
 }
-
 ```
 
 Then simply install the package using the Unity Package Manager using the _NPM - xprees_ scope or by the package name `cz.xprees.event-logging`.
