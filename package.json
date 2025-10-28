@@ -15,6 +15,13 @@
     "Event Logging",
     "ScriptableObjects"
   ],
+  "samples": [
+    {
+      "displayName": "Event log Manager Example",
+      "description": "Basic script for collecting and sending events to API. Great for getting started quickly and as a starting point for your own implementations.",
+      "path": "Samples~/EventLogManager"
+    }
+  ],
   "author": {
     "name": "xprees",
     "email": "xprees.developer@gmail.com",

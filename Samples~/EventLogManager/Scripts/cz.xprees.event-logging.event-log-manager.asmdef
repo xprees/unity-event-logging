@@ -1,0 +1,9 @@
+﻿{
+  "name": "cz.xprees.event-logging.event-log-manager",
+  "rootNamespace": "Xprees.EventLogging.Samples",
+  "references": [
+    "GUID:999c2ca78ab34358a1222750376a501c",
+    "GUID:2bc606c18a1a4f2cb45a7c51038804cf",
+    "GUID:f51ebe6a0ceec4240a699833d6309b23"
+  ]
+}

@@ -43,4 +43,8 @@ Then simply install the package using the Unity Package Manager using the _NPM -
 The package will automatically define the script define symbol `XPREES_EVENT_LOGGING` in the project settings. This is used to enable the event
 logging functionality in your project and compatibility with other packages using event-logging capabilities.
 
+## Quick Start
 
+For a quick start, you can use the `EventLogManager` sample, that will give you a head start on how to log events in your project.
+Import the sample via the Package Manager UI by selecting the package and clicking on the _Import Sample_ button.
+Then you can use the `EventLogManager` component in your scene or just copy the script to your project and adjust to your need!
