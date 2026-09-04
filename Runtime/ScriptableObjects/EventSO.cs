@@ -1,9 +1,10 @@
-using UnityEngine;
+﻿using UnityEngine;
 using Xprees.Core;
 
 namespace Xprees.EventLogging.ScriptableObjects
 {
     [CreateAssetMenu(menuName = "EventLogging/New Event", fileName = "Event")]
+    [StatefulLifetime(StateLifetime.Persistent)]
     public class EventSO : DescriptionBaseSO
     {
         [Tooltip("Scenario name")]
