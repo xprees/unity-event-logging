@@ -7,7 +7,7 @@ namespace Xprees.EventLogging.Api.Model
     {
         public long? id = null;
         public string scenario;
-        public DateTime timestamp;
+        public string timestamp;
 
         public string @event;
         public string eventData = null;

@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using Cysharp.Threading.Tasks;
-using Newtonsoft.Json;
 using UnityEngine;
 using UnityEngine.Networking;
 using Xprees.EventLogging.Api.Model;
@@ -12,12 +11,17 @@ namespace Xprees.EventLogging.Api
 {
     public class EventLoggingApi : IEventLoggingApi
     {
-        public const string DefaultEndpoint = "https://cf-collector.xprees.com/";
+        public const string DefaultEndpoint = "https://cf-collector.xprees.com";
 
         private readonly string _baseUrl;
         private string LogsUri => $"{_baseUrl}/logs";
         private string LogsBatchUri => $"{_baseUrl}/logs/batch";
         private string ScenariosUri => $"{_baseUrl}/logs/scenarios";
+
+        /// Seconds before a request is aborted. Browsers impose no default timeout, so WebGL relies on these.
+        private const int timeoutSeconds = 15;
+
+        private const int batchTimeoutSeconds = 30;
 
         public EventLoggingApi(string baseUrl = DefaultEndpoint)
         {
@@ -35,7 +39,8 @@ namespace Xprees.EventLogging.Api
         {
             try
             {
-                var request = UnityWebRequest.Get(_baseUrl);
+                using var request = UnityWebRequest.Get(_baseUrl);
+                request.timeout = timeoutSeconds;
                 await request.SendWebRequestAsync(cancellationToken);
                 return request.result == UnityWebRequest.Result.Success;
             }
@@ -51,7 +56,8 @@ namespace Xprees.EventLogging.Api
         {
             try
             {
-                var request = new UnityWebRequest(LogsUri, UnityWebRequest.kHttpVerbPOST);
+                using var request = new UnityWebRequest(LogsUri, UnityWebRequest.kHttpVerbPOST);
+                request.timeout = timeoutSeconds;
                 request.AddJsonBody(log);
                 await request.SendWebRequestAsync(cancellationToken);
                 return request.result == UnityWebRequest.Result.Success;
@@ -64,11 +70,15 @@ namespace Xprees.EventLogging.Api
             return false;
         }
 
-        public async UniTask<bool> SendEventLogsBatch(List<EventLog> logs, CancellationToken cancellationToken = default)
+        public async UniTask<bool> SendEventLogsBatch(
+            List<EventLog> logs,
+            CancellationToken cancellationToken = default
+        )
         {
             try
             {
-                var batchRequest = new UnityWebRequest(LogsBatchUri, UnityWebRequest.kHttpVerbPOST);
+                using var batchRequest = new UnityWebRequest(LogsBatchUri, UnityWebRequest.kHttpVerbPOST);
+                batchRequest.timeout = batchTimeoutSeconds;
                 batchRequest.AddJsonBody(logs);
                 await batchRequest.SendWebRequestAsync(cancellationToken);
                 return batchRequest.result == UnityWebRequest.Result.Success;
@@ -87,14 +97,16 @@ namespace Xprees.EventLogging.Api
             {
                 var downloadHandlerBuffer = new DownloadHandlerBuffer();
                 var uploadHandlerRaw = new UploadHandlerRaw(Array.Empty<byte>());
-                var request = new UnityWebRequest(ScenariosUri, UnityWebRequest.kHttpVerbGET, downloadHandlerBuffer, uploadHandlerRaw);
-                request.SetRequestHeader("Content-Type", "application/json");
+                using var request = new UnityWebRequest(ScenariosUri, UnityWebRequest.kHttpVerbGET, downloadHandlerBuffer,
+                    uploadHandlerRaw);
+                request.timeout = timeoutSeconds;
+                request.SetRequestHeader("Accept", "application/json");
                 await request.SendWebRequestAsync(cancellationToken);
                 var result = request.result;
                 if (result != UnityWebRequest.Result.Success) return Array.Empty<string>();
                 var rawString = request.downloadHandler.text;
 
-                return JsonConvert.DeserializeObject<string[]>(rawString);
+                return JsonUtilityExtensions.FromJsonArray<string>(rawString);
             }
             catch (Exception e)
             {

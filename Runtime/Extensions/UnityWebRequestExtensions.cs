@@ -1,8 +1,8 @@
 using System;
+using System.Collections;
 using System.Text;
 using System.Threading;
 using Cysharp.Threading.Tasks;
-using Newtonsoft.Json;
 using UnityEngine;
 using UnityEngine.Networking;
 
@@ -38,37 +38,15 @@ namespace Xprees.EventLogging.Extensions
 
         public static void AddJsonBody(this UnityWebRequest request, object body)
         {
-            var json = JsonConvert.SerializeObject(body);
+            // JsonUtility can't serialize a root-level collection, so build the array manually for those.
+            var json = body is IEnumerable items and not string
+                ? JsonUtilityExtensions.ToJsonArray(items)
+                : JsonUtility.ToJson(body);
             var jsonBytes = Encoding.UTF8.GetBytes(json);
 
             request.uploadHandler = new UploadHandlerRaw(jsonBytes);
             request.downloadHandler = new DownloadHandlerBuffer();
             request.SetRequestHeader("Content-Type", "application/json");
-        }
-
-        /// Tries to Request neverssl.com to check that internet connection is working 
-        public async static UniTask<UnityWebRequest.Result> TestInternetConnection(CancellationToken cancellationToken = default)
-        {
-            var request = UnityWebRequest.Get("http://neverssl.com");
-            try
-            {
-                await request.SendWebRequestAsync(cancellationToken: cancellationToken);
-            }
-            catch (OperationCanceledException)
-            {
-                // ignore
-            }
-            catch (UnityWebRequestException e)
-            {
-                Debug.LogError($"Webex: {e.Message}");
-                throw;
-            }
-            catch (Exception e)
-            {
-                Debug.LogError(e);
-            }
-
-            return request.result;
         }
     }
 }

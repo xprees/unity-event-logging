@@ -8,7 +8,7 @@ namespace Xprees.EventLogging.Extensions
     {
         public static EventLog GenerateEventLog(this EventSO @event, User user, DateTime timestamp) => new()
         {
-            timestamp = timestamp,
+            timestamp = timestamp.ToString("O"),
             user = user,
             scenario = @event.scenario?.Trim(),
             @event = @event.eventName.Trim(),
