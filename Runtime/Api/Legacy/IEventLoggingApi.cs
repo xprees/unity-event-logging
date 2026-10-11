@@ -1,10 +1,12 @@
+using System;
 using System.Collections.Generic;
 using System.Threading;
 using Cysharp.Threading.Tasks;
-using Xprees.EventLogging.Api.Model;
+using Xprees.EventLogging.Api.Legacy.Model;
 
-namespace Xprees.EventLogging.Api
+namespace Xprees.EventLogging.Api.Legacy
 {
+    [Obsolete("This interface is deprecated and will be removed in future versions. Please use the new OG-Analytics API instead.")]
     public interface IEventLoggingApi
     {
         /// Call this method before logging start to warm up the connection (otherwise the first log will be slow)

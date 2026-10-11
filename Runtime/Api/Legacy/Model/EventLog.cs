@@ -1,8 +1,10 @@
-﻿using System;
+using System;
 
-namespace Xprees.EventLogging.Api.Model
+namespace Xprees.EventLogging.Api.Legacy.Model
 {
     [Serializable]
+    [Obsolete(
+        "Legacy CF-Bucket API - the Open Game Analytics backend has no /logs/batch or /logs/scenarios. Use the v1 client. Removed in the next major version.")]
     public class EventLog
     {
         public long? id = null;

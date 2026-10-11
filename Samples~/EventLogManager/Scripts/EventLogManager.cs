@@ -1,34 +1,30 @@
-﻿using System;
-using System.Collections.Concurrent;
+using System;
+using System.Collections.Generic;
 using UnityEngine;
-using Xprees.EventLogging.Api.Model;
+using Xprees.EventLogging.Api.OpenGameAnalytics.V1;
+using Xprees.EventLogging.Api.OpenGameAnalytics.V1.Model;
+using Xprees.EventLogging.Api.OpenGameAnalytics.V1.Util;
 using Xprees.EventLogging.Extensions;
 using Xprees.EventLogging.ScriptableObjects;
 using Object = UnityEngine.Object;
 
 namespace Xprees.EventLogging.Samples.Scripts
 {
-    /// Local event log manager for elevator that collects and sends events to the event log api server.
+    /// Collects events and sends them to the Open Game Analytics API. Starting point for your own implementation.
     [DisallowMultipleComponent]
     public partial class EventLogManager : MonoBehaviour, IEventSenderService
     {
         [Header("Event Logging")]
-        [Tooltip(
-            "This is unique URL-SAFE ID for your project logs. "
-            + "Change it to your own project's ID, or you will mix logs with other projects using the same default ID. "
-            + "aka. Scenario name.")]
-        [SerializeField] private string projectId = "vr-mp-elevator";
+        [Tooltip("Scenario slug (a-z 0-9 . _ -) events are logged to when the event has no scenario. The scenario has to exist in the dashboard.")]
+        [SerializeField] private string defaultScenario = "my-scenario";
 
-        [Tooltip("Reference to the user manager that provides user data for the logs.")]
+        [Tooltip("Reference to the user manager that provides the player for the logs.")]
         [SerializeField] private EventUserManager userManager;
 
-        private User EventLoggingUser => userManager.CurrentUser;
-
-        private readonly ConcurrentBag<EventLog> _collectedEventLogs = new();
+        private readonly List<OGIngestEvent> _collectedEvents = new();
 
         private void Start()
         {
-            StartupApi();
             StartPeriodicUpload();
         }
 
@@ -37,12 +33,12 @@ namespace Xprees.EventLogging.Samples.Scripts
         private async void OnDisable()
         {
             StopPeriodicUpload();
-            if (uploadOnDisable) await UploadEvents(destroyCancellationToken);
+            if (Config is not { uploadOnDisable: false }) await UploadEvents(destroyCancellationToken);
         }
 
         private async void OnApplicationQuit()
         {
-            if (uploadOnQuit) await UploadEvents(destroyCancellationToken);
+            if (Config is not { uploadOnApplicationQuit: false }) await UploadEvents(destroyCancellationToken);
         }
 
         public void StartPeriodicUpload() => InvokeRepeating(nameof(Upload), sendInterval, sendInterval);
@@ -51,38 +47,42 @@ namespace Xprees.EventLogging.Samples.Scripts
 
         public void LogEvent(EventSO loggedEvent)
         {
-            SetCurrentScenarioToLoggedEventIfMissing(loggedEvent);
-            var user = EventLoggingUser;
-            if (string.IsNullOrEmpty(user.formId))
-            {
-                Debug.LogError($"{nameof(EventLogManager)} - Current user formId is null or empty! Resulting corrupted logs.", this);
-            }
+            if (loggedEvent == null) return;
 
-            if (loggedEvent == null || string.IsNullOrEmpty(loggedEvent.scenario))
+            if (userManager == null || userManager.CurrentPlayer == null)
             {
-                ConsoleLog($"{nameof(EventLogManager)} - Scenario is null or empty! Throwing out the log. "
-                           + $"Event: \"{(loggedEvent != null ? loggedEvent.eventName : "None")}\"");
+                ConsoleLog($"Dropped event \"{loggedEvent.eventName}\": no player (assign the {nameof(EventUserManager)}).", this);
                 return;
             }
 
-            var eventLog = loggedEvent.GenerateEventLog(user, DateTime.UtcNow);
-            lock (_collectedEventLogs) _collectedEventLogs.Add(eventLog);
+            var scenario = OGValidation.Slugify(string.IsNullOrEmpty(loggedEvent.scenario) ? defaultScenario : loggedEvent.scenario);
+            var group = string.IsNullOrEmpty(userManager.Group) || _invalidGroups.Contains(userManager.Group) ? null : userManager.Group;
+            var ingestEvent = loggedEvent.ToIngestEvent(userManager.CurrentPlayer.id, group, scenario, DateTime.UtcNow);
 
-            ConsoleLog($"Logged event: {eventLog.@event}", this);
+            var error = OGValidation.ValidateEvent(ingestEvent.playerId, ingestEvent.@event, ingestEvent.eventData, ingestEvent.group);
+            if (error != null || !OGValidation.IsValidSlug(scenario))
+            {
+                ConsoleLog($"Dropped event \"{loggedEvent.eventName}\": {error ?? "invalid scenario slug"}", this);
+                return;
+            }
+
+            lock (_collectedEvents)
+            {
+                if (_collectedEvents.Count >= maxQueuedEvents)
+                {
+                    ConsoleLog($"Event queue is full ({maxQueuedEvents}), dropping \"{loggedEvent.eventName}\".", this);
+                    return;
+                }
+
+                _collectedEvents.Add(ingestEvent);
+            }
+
+            ConsoleLog($"Logged event: {ingestEvent.@event}", this);
         }
-
-        private void SetCurrentScenarioToLoggedEventIfMissing(EventSO loggedEvent)
-        {
-            if (!string.IsNullOrEmpty(loggedEvent.scenario)) return;
-            // Try to fill scenario from current scenario name
-            loggedEvent.scenario = projectId;
-        }
-
-        private void ClearCollectedLogs() => _collectedEventLogs.Clear();
 
         private void ConsoleLog(string message, Object context = null)
         {
-            if (!logInConsole) return;
+            if (Config is { debugLogsEnabled: false }) return;
             Debug.Log(message, context);
         }
     }

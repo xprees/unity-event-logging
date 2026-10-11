@@ -1,55 +1,61 @@
-﻿using System;
+using System;
 using UnityEngine;
-using Xprees.EventLogging.Api.Model;
+using Xprees.EventLogging.Api.OpenGameAnalytics.V1.Model;
+using Xprees.EventLogging.Api.OpenGameAnalytics.V1.Util;
 
 namespace Xprees.EventLogging.Samples.Scripts
 {
-    /// Event user manager for the elevator experience.
-    /// Provides user data for event logging.
+    /// Provides the player (id, name, group) for event logging.
     [DisallowMultipleComponent]
     public class EventUserManager : MonoBehaviour, IEventUserSetupService
     {
-        // Changed default prefix of player GUIDs to easier separate event users from your project.
-        private const string defaultPrefix = "event-logging-sample";
+        private const string playerIdPrefsKey = "EventLoggingSamplePlayerId";
 
         [Header("Settings")]
-        [Tooltip("Prefix for the generated user GUIDs. Can be used to identify users from. e.g., event-logging-sample")]
-        [SerializeField] private string guidPrefix = "vr-mp-elevator";
+        [Tooltip("Prefix of the generated player id, e.g. player -> player-<uuidv7>")]
+        [SerializeField] private string playerIdPrefix = "player";
 
-        [Tooltip("Name of the player that will be used in event logs user.")]
-        [SerializeField] public string playerName = "player";
+        [Tooltip("Name of the player sent to the player profile.")]
+        [SerializeField] private string playerName = "player";
 
-        public User CurrentUser { get; set; }
+        [Tooltip("Optional group slug (a-z 0-9 . _ -) of the player in the scenario, e.g. control-a.")]
+        [SerializeField] private string group = "";
 
-        private void Awake() => SetupUserIfNeeded();
+        public OGPlayer CurrentPlayer { get; set; }
 
-        public void SetFormId(string actorId)
+        public string Group => group;
+
+        public event Action<OGPlayer> PlayerChanged;
+
+        private void Awake() => SetupPlayerIfNeeded();
+
+        public void SetPlayerId(string playerId)
         {
-            SetupUserIfNeeded();
-            CurrentUser.formId = actorId;
+            SetupPlayerIfNeeded();
+            CurrentPlayer.id = playerId;
+            PlayerChanged?.Invoke(CurrentPlayer);
         }
 
-        public void SetName(string username)
+        public void SetName(string newName)
         {
-            SetupUserIfNeeded();
-            CurrentUser.name = username;
+            SetupPlayerIfNeeded();
+            CurrentPlayer.name = newName;
+            PlayerChanged?.Invoke(CurrentPlayer);
         }
 
-        public void SetEmail(string email)
+        private void SetupPlayerIfNeeded()
         {
-            SetupUserIfNeeded();
-            CurrentUser.email = email;
-        }
+            if (CurrentPlayer != null) return;
 
-        private void SetupUserIfNeeded()
-        {
-            CurrentUser ??= new User
+            // The id is the process-mining case id, so it has to stay the same across sessions of the install.
+            var id = PlayerPrefs.GetString(playerIdPrefsKey, null);
+            if (string.IsNullOrEmpty(id))
             {
-                // Random unique user id
-                formId = $"{guidPrefix?.Trim() ?? defaultPrefix}-{Guid.NewGuid():D}",
-                name = playerName,
-                email = null,
-            };
+                id = $"{OGValidation.SanitizePlayerId(playerIdPrefix)}-{Uuid7.New()}";
+                PlayerPrefs.SetString(playerIdPrefsKey, id);
+            }
+
+            CurrentPlayer = new OGPlayer { id = id, name = playerName };
         }
     }
 }

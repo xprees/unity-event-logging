@@ -4,11 +4,13 @@ using System.Threading;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.Networking;
-using Xprees.EventLogging.Api.Model;
+using Xprees.EventLogging.Api.Legacy.Model;
 using Xprees.EventLogging.Extensions;
 
-namespace Xprees.EventLogging.Api
+namespace Xprees.EventLogging.Api.Legacy
 {
+    [Obsolete(
+        "Legacy CF-Bucket API - the Open Game Analytics backend has no /logs/batch or /logs/scenarios. Use the v1 client. Removed in the next major version.")]
     public class EventLoggingApi : IEventLoggingApi
     {
         public const string DefaultEndpoint = "https://cf-collector.xprees.com";
