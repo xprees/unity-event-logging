@@ -1,7 +1,9 @@
+using System;
 using System.Linq;
 using UnityEditor;
 using UnityEditor.Build;
 using UnityEditor.Build.Reporting;
+using UnityEngine;
 using Xprees.EventLogging.Api.OpenGameAnalytics.V1;
 
 namespace Xprees.EventLogging.Editor
@@ -12,7 +14,29 @@ namespace Xprees.EventLogging.Editor
     {
         public int callbackOrder => 0;
 
-        public void OnPreprocessBuild(BuildReport report) => Register(OGAnalyticsConfigSO.Instance);
+        public void OnPreprocessBuild(BuildReport report)
+        {
+            var config = OGAnalyticsConfigSO.Instance;
+            Register(config);
+
+            var others = FindOtherConfigPaths(config);
+            if (config && others.Length > 0)
+            {
+                Debug.LogWarning(
+                    $"Open Game Analytics: the build uses the global config \"{AssetDatabase.GetAssetPath(config)}\"; ignored configs: {string.Join(", ", others)}.");
+            }
+        }
+
+        /// Paths of every other config asset in the project (these are never the global config).
+        public static string[] FindOtherConfigPaths(OGAnalyticsConfigSO global)
+        {
+            var globalPath = global ? AssetDatabase.GetAssetPath(global) : null;
+            return AssetDatabase.FindAssets($"t:{nameof(OGAnalyticsConfigSO)}")
+                .Select(AssetDatabase.GUIDToAssetPath)
+                .Where(path => path != globalPath)
+                .OrderBy(path => path, StringComparer.Ordinal)
+                .ToArray();
+        }
 
         [InitializeOnLoadMethod]
         private static void RegisterOnLoad() => EditorApplication.delayCall += () => Register(OGAnalyticsConfigSO.Instance);

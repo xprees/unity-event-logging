@@ -13,9 +13,8 @@ namespace Xprees.EventLogging.Editor
     public class OGAnalyticsSettingsProvider : SettingsProvider
     {
         public const string DefaultConfigFolder = "Assets/Settings/OpenGameAnalytics";
-        public const string DefaultConfigPath = DefaultConfigFolder + "/OGAnalyticsConfig.asset";
+        public const string DefaultConfigPath = OGAnalyticsConfigSO.DefaultAssetPath;
         private const string settingsPagePath = "Project/Open Game Analytics";
-        private const string selectedConfigPrefsKey = "OGAnalytics.SelectedConfigGuid";
 
         private readonly static Color successColor = new(0.55f, 0.9f, 0.55f);
         private readonly static Color errorColor = new(1f, 0.6f, 0.6f);
@@ -54,10 +53,15 @@ namespace Xprees.EventLogging.Editor
         {
             EditorGUILayout.Space();
 
-            var selected = (OGAnalyticsConfigSO) EditorGUILayout.ObjectField("Config asset", _config, typeof(OGAnalyticsConfigSO), false);
-            if (selected != _config) SelectConfig(selected ?? FindAnyConfig() ?? CreateDefaultConfig());
-
             if (!_config) return;
+
+            // The global config is always the asset at the default path - other assets can only be used as explicit overrides.
+            using (new EditorGUI.DisabledScope(true))
+            {
+                EditorGUILayout.ObjectField("Config asset", _config, typeof(OGAnalyticsConfigSO), false);
+            }
+
+            DrawConfigWarnings();
             if (_serializedConfig == null || _serializedConfig.targetObject != _config) _serializedConfig = new SerializedObject(_config);
             _serializedConfig.Update();
 
@@ -109,6 +113,24 @@ namespace Xprees.EventLogging.Editor
             }
 
             DrawTest();
+        }
+
+        private void DrawConfigWarnings()
+        {
+            if (AssetDatabase.GetAssetPath(_config) != DefaultConfigPath)
+            {
+                EditorGUILayout.HelpBox(
+                    $"The global config should be at {DefaultConfigPath}. Move it there so every machine and CI use the same one.",
+                    MessageType.Warning);
+            }
+
+            var others = OGAnalyticsPreloadRegistrar.FindOtherConfigPaths(_config);
+            if (others.Length > 0)
+            {
+                EditorGUILayout.HelpBox(
+                    "Other Open Game Analytics configs exist and are ignored as the global config (usable only as an override):\n" +
+                    string.Join("\n", others), MessageType.Info);
+            }
         }
 
         /// Draws the property followed by its validation error (if any).
@@ -194,30 +216,7 @@ namespace Xprees.EventLogging.Editor
             }
         }
 
-        private void LoadConfig()
-        {
-            var guid = EditorPrefs.GetString(selectedConfigPrefsKey, null);
-            var path = string.IsNullOrEmpty(guid) ? null : AssetDatabase.GUIDToAssetPath(guid);
-            _config = string.IsNullOrEmpty(path) ? null : AssetDatabase.LoadAssetAtPath<OGAnalyticsConfigSO>(path);
-            _config ??= AssetDatabase.LoadAssetAtPath<OGAnalyticsConfigSO>(DefaultConfigPath);
-            _config ??= FindAnyConfig();
-        }
-
-        private static OGAnalyticsConfigSO FindAnyConfig()
-        {
-            var found = AssetDatabase.FindAssets($"t:{nameof(OGAnalyticsConfigSO)}");
-            return found.Length > 0 ? AssetDatabase.LoadAssetAtPath<OGAnalyticsConfigSO>(AssetDatabase.GUIDToAssetPath(found[0])) : null;
-        }
-
-        private void SelectConfig(OGAnalyticsConfigSO config)
-        {
-            _config = config;
-            _serializedConfig = null;
-            _lastResult = null;
-            var path = !config ? null : AssetDatabase.GetAssetPath(config);
-            EditorPrefs.SetString(selectedConfigPrefsKey, string.IsNullOrEmpty(path) ? string.Empty : AssetDatabase.AssetPathToGUID(path));
-            OGAnalyticsPreloadRegistrar.Register(config);
-        }
+        private void LoadConfig() => _config = OGAnalyticsConfigSO.Instance;
 
         private static OGAnalyticsConfigSO CreateDefaultConfig()
         {
@@ -228,7 +227,6 @@ namespace Xprees.EventLogging.Editor
             AssetDatabase.CreateAsset(config, DefaultConfigPath);
             AssetDatabase.SaveAssets();
             Debug.Log($"Created Open Game Analytics config at {DefaultConfigPath}.", config);
-            EditorPrefs.SetString(selectedConfigPrefsKey, AssetDatabase.AssetPathToGUID(DefaultConfigPath));
             return config;
         }
 

@@ -61,10 +61,14 @@ namespace Xprees.EventLogging.Api.OpenGameAnalytics.V1
         [Tooltip("Player id used by the 'Test connection' sample event.")]
         public string validationPlayerId = "settings-test";
 
+        /// The global config always lives here. Any other config asset is only usable as an explicit override (e.g. a component's field).
+        public const string DefaultAssetPath = "Assets/Settings/OpenGameAnalytics/OGAnalyticsConfig.asset";
+
         private static OGAnalyticsConfigSO instance;
 
-        /// The global config. At runtime it is one of the Preloaded Assets (registered by the Project Settings page), in the Editor it is the
-        /// asset selected there. Null when no config exists.
+        /// The global config. In the Editor it is the asset at <see cref="DefaultAssetPath"/> (so builds and CI agree on it); at runtime it is
+        /// the first config loaded at startup, which is the one registered in Preloaded Assets (scene-referenced overrides load later).
+        /// Null when no config exists.
         public static OGAnalyticsConfigSO Instance
         {
             get
@@ -72,13 +76,10 @@ namespace Xprees.EventLogging.Api.OpenGameAnalytics.V1
                 if (instance) return instance;
 #if UNITY_EDITOR
                 instance = FindInEditor();
+#else
+                var loaded = Resources.FindObjectsOfTypeAll<OGAnalyticsConfigSO>();
+                if (loaded.Length > 0) instance = loaded[0];
 #endif
-                if (!instance)
-                {
-                    var loaded = Resources.FindObjectsOfTypeAll<OGAnalyticsConfigSO>(); // preloaded assets are loaded at startup
-                    if (loaded.Length > 0) instance = loaded[0];
-                }
-
                 return instance;
             }
         }
@@ -86,13 +87,24 @@ namespace Xprees.EventLogging.Api.OpenGameAnalytics.V1
 #if UNITY_EDITOR
         private static OGAnalyticsConfigSO FindInEditor()
         {
+            var config = AssetDatabase.LoadAssetAtPath<OGAnalyticsConfigSO>(DefaultAssetPath);
+            if (config) return config;
+
+            // Config moved away from the default path - still usable, but the settings page and the build warn about it.
             var guids = AssetDatabase.FindAssets($"t:{nameof(OGAnalyticsConfigSO)}");
+            Array.Sort(guids, (x, y) => string.CompareOrdinal(AssetDatabase.GUIDToAssetPath(x),
+                AssetDatabase.GUIDToAssetPath(y)));
             return guids.Length > 0
                 ? AssetDatabase.LoadAssetAtPath<OGAnalyticsConfigSO>(AssetDatabase.GUIDToAssetPath(guids[0]))
                 : null;
         }
 
         private void OnDisable() => instance = instance == this ? null : instance;
+#else
+        private void OnEnable()
+        {
+            if (!instance) instance = this; // the preloaded config is loaded before any scene, so it wins over scene-referenced overrides
+        }
 #endif
 
         /// All connection fields are valid, so requests can be sent.
