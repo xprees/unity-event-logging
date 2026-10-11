@@ -49,7 +49,14 @@ namespace Xprees.EventLogging.Api.OpenGameAnalytics.V1.Util
             return sb.ToString();
         }
 
-        /// Lower-cases, turns whitespace into <c>-</c> and drops everything outside the slug charset. Keeps <c>_</c> and <c>.</c>.
+        // Explicit map instead of string.Normalize(FormD) - Normalize is not reliable in IL2CPP/WebGL builds.
+        private const string accentedChars = "áàâäãåąćčçďéèêëěęíìîïłňńñóòôöõőøřśšťúùûüůűýÿźžż";
+
+        private const string plainChars =
+            "aaaaaaaccc" + "d" + "eeeeee" + "iiii" + "lnnn" + "oooooo" + "o" + "rss" + "t" + "uuuuuu" + "yy" + "zzz";
+
+        /// Lower-cases, turns whitespace into <c>-</c>, transliterates accents (<c>Třída</c> -> <c>trida</c>) and drops everything outside
+        /// the slug charset. Keeps <c>_</c> and <c>.</c>.
         /// Returns empty when nothing usable is left.
         public static string Slugify(string value)
         {
@@ -59,6 +66,8 @@ namespace Xprees.EventLogging.Api.OpenGameAnalytics.V1.Util
             {
                 if (sb.Length >= MaxSlugLength) break;
                 var c = char.ToLowerInvariant(raw);
+                var accent = accentedChars.IndexOf(c);
+                if (accent >= 0) c = plainChars[accent];
                 if (char.IsWhiteSpace(c)) sb.Append('-');
                 else if (IsSlugChar(c)) sb.Append(c);
             }

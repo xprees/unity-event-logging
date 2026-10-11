@@ -42,6 +42,8 @@ namespace Xprees.EventLogging.Tests
         [TestCase("Matej_test", "matej_test")]
         [TestCase("  Scenario 2!  ", "scenario-2")]
         [TestCase("a.b_c", "a.b_c")]
+        [TestCase("Třída_1", "trida_1")]
+        [TestCase("Žluťoučký kůň", "zlutoucky-kun")]
         [TestCase("???", "")]
         [TestCase("", "")]
         [TestCase(null, "")]
